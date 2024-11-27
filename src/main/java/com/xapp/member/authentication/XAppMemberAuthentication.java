@@ -1,4 +1,4 @@
-package com.xapp.member;
+package com.xapp.member.authentication;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
