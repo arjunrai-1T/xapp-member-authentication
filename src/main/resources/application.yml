@@ -1,15 +1,15 @@
 spring:
   application:
       name: xapp
-  datasource:
-    url: jdbc:postgresql://localhost:5432/xapp
-    username: root
-    password: redhat
-    driver-class-name: org.postgresql.Driver
-    jpa:
-      database-platform: org.hibernate.dialect.PostgreSQL95Dialect
-      hibernate:
-        ddl-auto: none
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/xapp
+#    username: root
+#    password: redhat
+#    driver-class-name: org.postgresql.Driver
+#    jpa:
+#      database-platform: org.hibernate.dialect.PostgreSQL95Dialect
+#      hibernate:
+#        ddl-auto: none
 
 server:
     port: 8081
