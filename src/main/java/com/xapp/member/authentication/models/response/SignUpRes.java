@@ -1,4 +1,4 @@
 package com.xapp.member.authentication.models.response;
 
-public class SignupRes {
+public class SignUpRes {
 }

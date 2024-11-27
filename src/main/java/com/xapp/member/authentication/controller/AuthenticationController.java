@@ -14,12 +14,12 @@ import reactor.core.publisher.Mono;
 public class AuthenticationController {
 
     @PostMapping("/signin")
-    public Mono<SignupRes> doSignIn(@Valid @RequestBody SigninReq req){
+    public Mono<SignUpRes> doSignIn(@Valid @RequestBody SignInRes req){
         return null;
     }
 
     @PostMapping("/signup")
-    public Mono<SignupRes> doSignIn(@RequestBody SignupReq req){
+    public Mono<SignUpRes> doSignIn(@RequestBody SignUpReq req){
         return null;
     }
 
