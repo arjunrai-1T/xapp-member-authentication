@@ -5,6 +5,5 @@ import lombok.*;
 
 @Getter
 @Setter
-@Builder
 public class SignInRes extends BaseResponse {
 }

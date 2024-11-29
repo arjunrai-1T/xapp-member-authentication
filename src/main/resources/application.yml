@@ -3,13 +3,14 @@ spring:
       name: xapp
   datasource:
     url: jdbc:postgresql://localhost:5432/xapp
-    username: root
+    username: postgres
     password: redhat
     driver-class-name: org.postgresql.Driver
     jpa:
       database-platform: org.hibernate.dialect.PostgreSQL95Dialect
       hibernate:
         ddl-auto: none
+        show-sql: true
 
 server:
     port: 8081

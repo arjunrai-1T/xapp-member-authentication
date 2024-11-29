@@ -1,6 +1,7 @@
 package com.xapp.member.authentication.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Table(name = "USER_CATEGORIES")
 @Getter
 @Setter
+@Builder
 public class UserCategories {
 
     @Id

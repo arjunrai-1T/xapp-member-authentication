@@ -1,6 +1,7 @@
 package com.xapp.member.authentication.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Table(name = "USER_STATUS_HASH_LIST")
 @Getter
 @Setter
+@Builder
 public class UserStatusHashList {
 
     @Id
