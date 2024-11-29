@@ -1,6 +1,7 @@
 package com.xapp.member.authentication.service.impl;
 
 import com.xapp.member.authentication.configs.XAppConfig;
+import com.xapp.member.authentication.controller.AuthenticationController;
 import com.xapp.member.authentication.entity.UserCategories;
 import com.xapp.member.authentication.entity.UserLoginInfo;
 import com.xapp.member.authentication.entity.UserStatusHashList;
@@ -11,15 +12,17 @@ import com.xapp.member.authentication.repository.UserCategoriesRepository;
 import com.xapp.member.authentication.repository.UserLoginInfoRepository;
 import com.xapp.member.authentication.repository.UserStatusHashListRepository;
 import com.xapp.member.authentication.service.def.AuthenticationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-
+@Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
@@ -34,6 +37,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private XAppConfig xAppConfig;
 
+    private final Logger logger= LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+
+    private final String AuthenticationServiceImplName = "AuthenticationServiceImpl";
+
     @Transactional
     public Mono<SignInRes> doSignInImplEndUser(SignInReq req){
         return null;
@@ -41,6 +48,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Transactional
     public Mono<SignUpRes> doSignUpImplEndUser(SignUpReq req){
+
+        logger.info("eapi service {} entry",AuthenticationServiceImplName);
 
         List<UserStatusHashList> userStatusHashList = userStatusHashListRepository.findAll().stream()
                 .filter(userStatusHash -> userStatusHash.getUserStatusKey().equals(xAppConfig.USER_TYPE_END_USER))  // Filter by category name
@@ -61,12 +70,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         UserLoginInfo savedUserLoginInfo = userLoginInfoRepository.save(userLoginInfo);
         if (savedUserLoginInfo != null && savedUserLoginInfo.getProfileId() != null) {
+            logger.info("eapi service {} exit",AuthenticationServiceImplName);
             return Mono.just((SignUpRes) SignUpRes.builder()
                             .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                             .status("success") // status
                             .message("User created successfully") // message
                             .build());
         } else {
+            logger.info("eapi service {} exit with error",AuthenticationServiceImplName);
             return Mono.just((SignUpRes) SignUpRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("fail") // status

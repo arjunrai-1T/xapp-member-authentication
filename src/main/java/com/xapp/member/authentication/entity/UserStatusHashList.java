@@ -1,9 +1,7 @@
 package com.xapp.member.authentication.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 
 @Entity
@@ -11,6 +9,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserStatusHashList {
 
     @Id
