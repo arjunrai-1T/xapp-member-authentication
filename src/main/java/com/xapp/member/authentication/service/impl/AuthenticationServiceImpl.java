@@ -4,6 +4,7 @@ import com.xapp.member.authentication.configs.XAppConfig;
 import com.xapp.member.authentication.entity.UserCategories;
 import com.xapp.member.authentication.entity.UserLoginInfo;
 import com.xapp.member.authentication.entity.UserStatusHashList;
+import com.xapp.member.authentication.exceptions.ErrorResponseException;
 import com.xapp.member.authentication.models.common.SearchOutputMeta;
 import com.xapp.member.authentication.models.request.*;
 import com.xapp.member.authentication.models.response.*;
@@ -69,6 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             parsedDateTime = LocalDateTime.parse(formattedDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } catch (DateTimeParseException ignored) {
             logger.info("eapi service found creationDatetime {} with DateTimeParseException",AuthenticationServiceImplName);
+            return Mono.error(new ErrorResponseException("User created failed with DateTimeParseException"));
         }
         UserLoginInfo userLoginInfo = UserLoginInfo.builder()
                 .profileId(req.getSearchInputMeta().getCorrelationId())
@@ -85,32 +87,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             savedUserLoginInfo = userLoginInfoRepository.save(userLoginInfo);
         }catch(DataIntegrityViolationException ex){
             logger.info("eapi service {} exit with DataIntegrityViolationException",AuthenticationServiceImplName);
-            SignUpRes signUpRes = SignUpRes.builder()
-                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
-                    .status("fail") // status
-                    .message("User already exist") // message
-                    .build();
-            return Mono.just(signUpRes);
+            return Mono.error(new ErrorResponseException("User already exists"));
         }catch(ConstraintViolationException ex){
             logger.info("eapi service {} exit with ConstraintViolationException",AuthenticationServiceImplName);
-            SignUpRes signUpRes = SignUpRes.builder()
-                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
-                    .status("fail") // status
-                    .message("User already exist") // message
-                    .build();
-            return Mono.just(signUpRes);
+            return Mono.error(new ErrorResponseException("User created failed with exception"));
 
         }catch(OptimisticLockException ex){
             logger.info("eapi service {} exit with OptimisticLockException",AuthenticationServiceImplName);
-            SignUpRes signUpRes = SignUpRes.builder()
-                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
-                    .status("fail") // status
-                    .message("User created failed") // message
-                    .build();
-            return Mono.just(signUpRes);
+            return Mono.error(new ErrorResponseException("User created failed with exception"));
         }
         if (savedUserLoginInfo != null && savedUserLoginInfo.getProfileId() != null) {
-            logger.info("eapi service {} exit",AuthenticationServiceImplName);
+            logger.info("eapi service {} exit with success",AuthenticationServiceImplName);
+            logger.info("eapi service {} savedUserLoginInfo: {}",savedUserLoginInfo.toString());
             SignUpRes signUpRes = (SignUpRes) SignUpRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("success") // status
