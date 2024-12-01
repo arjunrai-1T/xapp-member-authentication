@@ -1,7 +1,6 @@
 package com.xapp.member.authentication.service.impl;
 
 import com.xapp.member.authentication.configs.XAppConfig;
-import com.xapp.member.authentication.controller.AuthenticationController;
 import com.xapp.member.authentication.entity.UserCategories;
 import com.xapp.member.authentication.entity.UserLoginInfo;
 import com.xapp.member.authentication.entity.UserStatusHashList;
@@ -15,12 +14,17 @@ import com.xapp.member.authentication.service.def.AuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import jakarta.persistence.OptimisticLockException;
+import org.hibernate.exception.ConstraintViolationException;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -52,37 +56,75 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logger.info("eapi service {} entry",AuthenticationServiceImplName);
 
         List<UserStatusHashList> userStatusHashList = userStatusHashListRepository.findAll().stream()
-                .filter(userStatusHash -> userStatusHash.getUserStatusKey().equals(xAppConfig.USER_TYPE_END_USER))  // Filter by category name
+                .filter(userStatusHash -> userStatusHash.getUserStatusKey().equals(xAppConfig.USER_STATUS_ACTIVE))  // Filter by category name
                 .toList();
 
         List<UserCategories> userCategoriesList = userCategoriesRepository.findAll().stream()
                                                   .filter(userCategory -> userCategory.getCategoryName().equals(xAppConfig.USER_TYPE_END_USER))  // Filter by category name
                                                   .toList();
 
+        String formattedDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        LocalDateTime parsedDateTime = null;
+        try {
+            parsedDateTime = LocalDateTime.parse(formattedDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (DateTimeParseException ignored) {
+            logger.info("eapi service found creationDatetime {} with DateTimeParseException",AuthenticationServiceImplName);
+        }
         UserLoginInfo userLoginInfo = UserLoginInfo.builder()
-                .profileId("Test")
+                .profileId(req.getSearchInputMeta().getCorrelationId())
                 .userLoginId(req.getLoginId())
                 .userPwd(req.getPassword())
                 .userStatus(userStatusHashList.get(0))
                 .userType(userCategoriesList.get(0))
                 .isDeleted(false)
-                .creationDatetime(LocalDateTime.parse(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+                .creationDatetime(parsedDateTime)
                 .build();
-        UserLoginInfo savedUserLoginInfo = userLoginInfoRepository.save(userLoginInfo);
-        if (savedUserLoginInfo != null && savedUserLoginInfo.getProfileId() != null) {
-            logger.info("eapi service {} exit",AuthenticationServiceImplName);
-            return Mono.just((SignUpRes) SignUpRes.builder()
-                            .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
-                            .status("success") // status
-                            .message("User created successfully") // message
-                            .build());
-        } else {
-            logger.info("eapi service {} exit with error",AuthenticationServiceImplName);
-            return Mono.just((SignUpRes) SignUpRes.builder()
+
+        UserLoginInfo savedUserLoginInfo = null;
+        try {
+            savedUserLoginInfo = userLoginInfoRepository.save(userLoginInfo);
+        }catch(DataIntegrityViolationException ex){
+            logger.info("eapi service {} exit with DataIntegrityViolationException",AuthenticationServiceImplName);
+            SignUpRes signUpRes = SignUpRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail") // status
+                    .message("User already exist") // message
+                    .build();
+            return Mono.just(signUpRes);
+        }catch(ConstraintViolationException ex){
+            logger.info("eapi service {} exit with ConstraintViolationException",AuthenticationServiceImplName);
+            SignUpRes signUpRes = SignUpRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail") // status
+                    .message("User already exist") // message
+                    .build();
+            return Mono.just(signUpRes);
+
+        }catch(OptimisticLockException ex){
+            logger.info("eapi service {} exit with OptimisticLockException",AuthenticationServiceImplName);
+            SignUpRes signUpRes = SignUpRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("fail") // status
                     .message("User created failed") // message
-                    .build());
+                    .build();
+            return Mono.just(signUpRes);
+        }
+        if (savedUserLoginInfo != null && savedUserLoginInfo.getProfileId() != null) {
+            logger.info("eapi service {} exit",AuthenticationServiceImplName);
+            SignUpRes signUpRes = (SignUpRes) SignUpRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("success") // status
+                    .message("User created successfully") // message
+                    .build();
+            return Mono.just(signUpRes);
+        } else {
+            logger.info("eapi service {} exit with error",AuthenticationServiceImplName);
+            SignUpRes signUpRes = SignUpRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail") // status
+                    .message("User created failed") // message
+                    .build();
+            return Mono.just(signUpRes);
         }
     }
 
