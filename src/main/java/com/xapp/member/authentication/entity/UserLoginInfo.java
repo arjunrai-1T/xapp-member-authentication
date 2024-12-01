@@ -26,7 +26,7 @@ public class UserLoginInfo {
     private String userPwd;
 
     @ManyToOne
-    @JoinColumn(name = "USER_STATUS_ID", referencedColumnName = "ID", nullable = false)
+    @JoinColumn(name = "USER_STATUS", referencedColumnName = "USER_STATUS", nullable = false)
     private UserStatusHashList userStatus;
 
     @ManyToOne

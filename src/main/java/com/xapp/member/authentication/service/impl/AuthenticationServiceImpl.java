@@ -56,6 +56,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         logger.info("eapi service {} entry",AuthenticationServiceImplName);
 
+        UserLoginInfo savedUserLoginInfo = null;
+
+        List<UserLoginInfo> usserLoginList = userLoginInfoRepository.findAll().stream()
+                .filter(user -> user.getUserLoginId().equalsIgnoreCase(req.getLoginId()))  // Filter by category name
+                .toList();
+
+        if(!usserLoginList.isEmpty()){
+            logger.info("eapi service found creationDatetime {} with DateTimeParseException",AuthenticationServiceImplName);
+            SignUpRes signUpRes = SignUpRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail") // status
+                    .message("User already exist") // message
+                    .build();
+            return Mono.just(signUpRes);
+        }
+
         List<UserStatusHashList> userStatusHashList = userStatusHashListRepository.findAll().stream()
                 .filter(userStatusHash -> userStatusHash.getUserStatusKey().equals(xAppConfig.USER_STATUS_ACTIVE))  // Filter by category name
                 .toList();
@@ -82,23 +98,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .creationDatetime(parsedDateTime)
                 .build();
 
-        UserLoginInfo savedUserLoginInfo = null;
         try {
             savedUserLoginInfo = userLoginInfoRepository.save(userLoginInfo);
         }catch(DataIntegrityViolationException ex){
-            logger.info("eapi service {} exit with DataIntegrityViolationException",AuthenticationServiceImplName);
+            logger.info("eapi service {} exit with DataIntegrityViolationException {}",AuthenticationServiceImplName,ex.getMessage());
             return Mono.error(new ErrorResponseException("User already exists"));
         }catch(ConstraintViolationException ex){
-            logger.info("eapi service {} exit with ConstraintViolationException",AuthenticationServiceImplName);
+            logger.info("eapi service {} exit with ConstraintViolationException {}",AuthenticationServiceImplName,ex.getMessage());
             return Mono.error(new ErrorResponseException("User created failed with exception"));
 
         }catch(OptimisticLockException ex){
-            logger.info("eapi service {} exit with OptimisticLockException",AuthenticationServiceImplName);
+            logger.info("eapi service {} exit with OptimisticLockException {}",AuthenticationServiceImplName,ex.getMessage());
+            return Mono.error(new ErrorResponseException("User created failed with exception"));
+        }catch(org.springframework.orm.jpa.JpaSystemException ex){
+            logger.info("eapi service {} exit with JpaSystemException {}",AuthenticationServiceImplName,ex.getMessage());
             return Mono.error(new ErrorResponseException("User created failed with exception"));
         }
         if (savedUserLoginInfo != null && savedUserLoginInfo.getProfileId() != null) {
             logger.info("eapi service {} exit with success",AuthenticationServiceImplName);
-            logger.info("eapi service {} savedUserLoginInfo: {}",savedUserLoginInfo.toString());
+            logger.info("eapi service {} savedUserLoginInfo: {}",(savedUserLoginInfo.toString()));
             SignUpRes signUpRes = (SignUpRes) SignUpRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("success") // status
