@@ -36,6 +36,46 @@ public class HashGenerator {
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~";
 
+    /****************************************************************************************************************************************************/
+
+    // Generates a random salt
+    public static String generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16]; // 16-byte salt (can be adjusted)
+        random.nextBytes(salt);
+        return Base64.getEncoder().encodeToString(salt); // Base64 encode to store as a string
+    }
+
+    // Generates hash with salt using specified algorithm
+    public static String generateHashWithSalt(String input, String salt, String algoName) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algoName);
+            // Combine the input password and the salt
+            String saltedInput = input + salt;
+            byte[] hashBytes = digest.digest(saltedInput.getBytes());
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();  // Return the hash of the salted password
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // Verifying a password with the stored hash and salt
+    public static boolean verifyPassword(String enteredPassword, String storedHash, String storedSalt, String algoName) {
+        // Rehash the entered password with the stored salt
+        String enteredPasswordHash = generateHashWithSalt(enteredPassword, storedSalt, algoName);
+        // Compare the generated hash with the stored hash
+        return enteredPasswordHash.equals(storedHash);
+    }
+
+    /****************************************************************************************************************************************************/
+
     public static void TestGenerateHashFromAnyString(String word) {
         //Ref:  https://randomkeygen.com
         logger.info("TestGenerateHashFromAnyString SHA-1:   " + generateHash(word,"SHA-1") );
@@ -97,42 +137,6 @@ public class HashGenerator {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    // Generates a random salt
-    public static String generateSalt() {
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[16]; // 16-byte salt (can be adjusted)
-        random.nextBytes(salt);
-        return Base64.getEncoder().encodeToString(salt); // Base64 encode to store as a string
-    }
-
-    // Generates hash with salt using specified algorithm
-    public static String generateHashWithSalt(String input, String salt, String algoName) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance(algoName);
-            // Combine the input password and the salt
-            String saltedInput = input + salt;
-            byte[] hashBytes = digest.digest(saltedInput.getBytes());
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();  // Return the hash of the salted password
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // Verifying a password with the stored hash and salt
-    public static boolean verifyPassword(String enteredPassword, String storedHash, String storedSalt, String algoName) {
-        // Rehash the entered password with the stored salt
-        String enteredPasswordHash = generateHashWithSalt(enteredPassword, storedSalt, algoName);
-        // Compare the generated hash with the stored hash
-        return enteredPasswordHash.equals(storedHash);
     }
 
     //Example hash Code : wdQHF6PLCG , h8K0mkKPA4 ,fqj4dCif3n ,CAUtJM3KwB ,JpMYJ4Op1z ,h8K0mkKPA4
