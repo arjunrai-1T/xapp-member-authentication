@@ -16,13 +16,16 @@ import java.time.LocalDateTime;
 public class UserLoginInfo {
 
     @Id
-    @Column(name = "PROFILE_ID", length = 10, nullable = false)
+    @Column(name = "PROFILE_ID", length = 30, nullable = false)
     private String profileId;
 
     @Column(name = "USER_LOGIN_ID", length = 200, nullable = false, unique = true)
     private String userLoginId;
 
-    @Column(name = "USER_PWD", length = 512, nullable = false)
+    @Column(name = "USER_PWD_SALT", length = 512, nullable = false)
+    private String userPwdSalt;
+
+    @Column(name = "USER_PWD", length = 1024, nullable = false)
     private String userPwd;
 
     @ManyToOne

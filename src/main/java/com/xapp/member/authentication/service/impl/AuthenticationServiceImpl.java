@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import jakarta.persistence.OptimisticLockException;
 import org.hibernate.exception.ConstraintViolationException;
+import com.xapp.member.authentication.utility.HashGenerator;
+
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -42,12 +45,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private XAppConfig xAppConfig;
 
+
     private final Logger logger= LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
     private final String AuthenticationServiceImplName = "AuthenticationServiceImpl";
 
     @Transactional
-    public Mono<SignInRes> doSignInImplEndUser(SignInReq req){
+    public Mono<SignInRes> doSignInImplEndUser(SignInReq req , WebSession webSession){
+//        return doSignInImplEndUser(signInReq)
+//                .doOnSuccess(signInRes -> {
+//                    // Generate JWT token after successful sign-in
+//                    String authToken = jwtService.generateToken(signInRes.getUserId());
+//
+//                    // Store userId and authToken in the session
+//                    webSession.getAttributes().put("userId", signInRes.getUserId());
+//                    webSession.getAttributes().put("authToken", authToken);
+//                });
         return null;
     }
 
@@ -88,10 +101,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             logger.info("eapi service found creationDatetime {} with DateTimeParseException",AuthenticationServiceImplName);
             return Mono.error(new ErrorResponseException("User created failed with DateTimeParseException"));
         }
+        String completeUserInfo = req.getLoginId()+" "+req.getPassword()+userCategoriesList.get(0).getCategoryName();
+        String profileId ="PF" + HashGenerator.generateWEPKeyFromString(completeUserInfo, 16);
+        if(profileId.length()> 30 ){
+            profileId = profileId.substring(0, 30);
+        }
+        String pwdSalt = HashGenerator.generateSalt();
+        String pwdHash = HashGenerator.generateHashWithSalt(req.getPassword(),pwdSalt,"SHA-256");
         UserLoginInfo userLoginInfo = UserLoginInfo.builder()
-                .profileId(req.getSearchInputMeta().getCorrelationId())
+                .profileId(profileId)
                 .userLoginId(req.getLoginId())
-                .userPwd(req.getPassword())
+                .userPwdSalt(pwdSalt)
+                .userPwd(pwdHash)
                 .userStatus(userStatusHashList.get(0))
                 .userType(userCategoriesList.get(0))
                 .isDeleted(false)
