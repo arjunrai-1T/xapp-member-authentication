@@ -26,7 +26,7 @@ public class JwtToken {
 
     // Define your secret key (make sure it's at least 256 bits for HS512)
     // String baseKey = "your-very-secure-key-that-is-at-least-64-bytes-long!"; // Replace with your actual key
-    private final String SECRET_KEY = "your_secret_key";  // Should be in a secure place
+    private final String SECRET_KEY = "671C1E53A593CAFB63CC9C33FE9C1";  // Should be in a secure place
 
     private final long EXPIRATION_TIME = 1000 * 60 * 60;
 

@@ -1,16 +1,12 @@
 package com.xapp.member.authentication.service.impl;
 
 import com.xapp.member.authentication.configs.XAppConfig;
-import com.xapp.member.authentication.entity.UserCategories;
-import com.xapp.member.authentication.entity.UserLoginInfo;
-import com.xapp.member.authentication.entity.UserStatusHashList;
+import com.xapp.member.authentication.entity.*;
 import com.xapp.member.authentication.exceptions.ErrorResponseException;
 import com.xapp.member.authentication.models.common.SearchOutputMeta;
 import com.xapp.member.authentication.models.request.*;
 import com.xapp.member.authentication.models.response.*;
-import com.xapp.member.authentication.repository.UserCategoriesRepository;
-import com.xapp.member.authentication.repository.UserLoginInfoRepository;
-import com.xapp.member.authentication.repository.UserStatusHashListRepository;
+import com.xapp.member.authentication.repository.*;
 import com.xapp.member.authentication.service.def.AuthenticationService;
 import com.xapp.member.authentication.utility.JwtToken;
 import org.slf4j.Logger;
@@ -30,6 +26,8 @@ import jakarta.persistence.OptimisticLockException;
 import org.hibernate.exception.ConstraintViolationException;
 import com.xapp.member.authentication.utility.HashGenerator;
 
+import javax.crypto.SecretKey;
+
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -44,39 +42,78 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserStatusHashListRepository userStatusHashListRepository;
 
     @Autowired
+    UserSessionRepository userSessionRepository;
+
+    @Autowired
+    UserSessionKeyRepository userSessionKeyRepository;
+
+    @Autowired
     private XAppConfig xAppConfig;
 
     @Autowired
     JwtToken jwtToken;
 
     private final Logger logger= LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+
     private final String AuthenticationServiceImplName = "AuthenticationServiceImpl";
 
     @Transactional
     public Mono<SignInRes> doSignInImplEndUser(SignInReq req , WebSession webSession){
 
-        List<UserLoginInfo> usserLoginList = null;
-        usserLoginList = userLoginInfoRepository.findAll().stream()
+        List<UserLoginInfo> userLoginList = null;
+        userLoginList = userLoginInfoRepository.findAll().stream()
                 .filter(user -> user.getUserLoginId().equalsIgnoreCase(req.getUserid()))  // Filter by user login id
                 .toList();
-        if(null == usserLoginList || usserLoginList.size() == 0){
+        if(null == userLoginList || userLoginList.size() == 0){
             return Mono.just(SignInRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("fail")
                     .message("user not found").build());
         }
-        UserLoginInfo userLoginInfo = usserLoginList.get(0);
+        UserLoginInfo userLoginInfo = userLoginList.get(0);
         String storedHash = userLoginInfo.getUserPwd();
         String storedSalt = userLoginInfo.getUserPwdSalt();
         String algoName = "SHA-256";
         String enteredPassword = req.getPassword();
         boolean isMatched = HashGenerator.verifyPassword(enteredPassword, storedHash,  storedSalt,  algoName);
         if(isMatched){
+            //get secret key from database
+            List<UserSessionKey> userSessionKeyList = null;
+            userSessionKeyList = userSessionKeyRepository.findAll().stream().toList();
+            logger.info("eapi {} secret key: {}",AuthenticationServiceImplName,userSessionKeyList.get(0).getSecretKey());
             // Generate JWT token after successful sign-in
             // String authToken = jwtToken.generateToken(req.getUserid());
             // Store userId and authToken in the session
             // webSession.getAttributes().put("userId", req.getUserid());
             // webSession.getAttributes().put("authToken", authToken);
+            SecretKey secretKey    = jwtToken.createSecretKey(userSessionKeyList.get(0).getSecretKey());
+            String    sessionToken = jwtToken.createToken(secretKey,req.getUserid(),"","login session");
+            //Login Date & Time
+            String formattedDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime parsedLogInDateTime = null;
+            try {
+                parsedLogInDateTime = LocalDateTime.parse(formattedDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            } catch (DateTimeParseException ignored) {
+                logger.info("eapi service found creationDatetime {} with parsedLogInDateTime(DateTimeParseException)",AuthenticationServiceImplName);
+                return Mono.error(new ErrorResponseException("User login failed with DateTimeParseException"));
+            }
+            //Logout Date & Time
+            formattedDateTime = LocalDateTime.now().plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime parsedLogoutDateTime = null;
+            try {
+                parsedLogoutDateTime = LocalDateTime.parse(formattedDateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            } catch (DateTimeParseException ignored) {
+                logger.info("eapi service found creationDatetime {} with parsedLogoutDateTime(DateTimeParseException)",AuthenticationServiceImplName);
+                return Mono.error(new ErrorResponseException("User login failed with DateTimeParseException"));
+            }
+            //Store session token
+            UserSession userSession = UserSession.builder()
+                                        .userLoginId(req.getUserid())
+                                        .sessionToken(sessionToken)
+                                        .expirationTime(parsedLogoutDateTime)
+                                        .loginDatetime(parsedLogInDateTime)
+                                        .logoutDatetime(null).build();
+            userSessionRepository.save(userSession);
             return Mono.just(SignInRes.builder()
                      .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                      .status("success")
