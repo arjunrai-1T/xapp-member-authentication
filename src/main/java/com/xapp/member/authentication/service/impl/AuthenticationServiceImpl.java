@@ -81,11 +81,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             List<UserSessionKey> userSessionKeyList = null;
             userSessionKeyList = userSessionKeyRepository.findAll().stream().toList();
             logger.info("eapi {} secret key: {}",AuthenticationServiceImplName,userSessionKeyList.get(0).getSecretKey());
-            // Generate JWT token after successful sign-in
-            // String authToken = jwtToken.generateToken(req.getUserid());
-            // Store userId and authToken in the session
-            // webSession.getAttributes().put("userId", req.getUserid());
-            // webSession.getAttributes().put("authToken", authToken);
             SecretKey secretKey    = jwtToken.createSecretKey(userSessionKeyList.get(0).getSecretKey());
             String    sessionToken = jwtToken.createToken(secretKey,req.getUserid(),"","login session");
             //Login Date & Time
@@ -114,6 +109,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         .loginDatetime(parsedLogInDateTime)
                                         .logoutDatetime(null).build();
             userSessionRepository.save(userSession);
+            // Store userId and authToken in the webSession
+            webSession.getAttributes().put("userId", req.getUserid());
+            webSession.getAttributes().put("sessionToken", sessionToken);
+            webSession.getAttributes().put("loginDateTime", parsedLogInDateTime);
+            webSession.getAttributes().put("logoutDateTime", parsedLogoutDateTime);
             return Mono.just(SignInRes.builder()
                      .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                      .status("success")
