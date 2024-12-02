@@ -10,24 +10,21 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.security.SecureRandom;
 
-/*
-SHA Algorithms
- Secure hash algorithm (SHA) is also one type of Cryptographic function. The algorithm is similar to MD5. The SHA algorithm,
- on the other hand, produces much stronger hashes than the MD5 algorithm. The SHA algorithm generates hashes that aren't always unique,
- which means there's a chance of collision. SHA, on the other hand, has a much lower collision rate than MD5. The output of SHA is called hashcode,
- there are four types of SHA algorithms based upon the size of the hash generated.
-
-    SHA-1 - It is the most basic SHA. It generates a hashcode of 160 bits.
-
-    SHA-256 - It has a higher level of security than SHA-1. It generates a hash with a length of 256.
-
-    SHA-384 - SHA-384 is a one-level higher than SHA-256, with a 384-bit hash.
-
-    SHA-512 - It is the most powerful of all the SHAs mentioned. It generates a 512-bit hash.
-
-    Ref:  https://randomkeygen.com
-
- */
+//SHA Algorithms
+// Secure hash algorithm (SHA) is also one type of Cryptographic function. The algorithm is similar to MD5. The SHA algorithm,
+// on the other hand, produces much stronger hashes than the MD5 algorithm. The SHA algorithm generates hashes that aren't always unique,
+// which means there's a chance of collision. SHA, on the other hand, has a much lower collision rate than MD5. The output of SHA is called hashcode,
+// there are four types of SHA algorithms based upon the size of the hash generated.
+//
+//    SHA-1 - It is the most basic SHA. It generates a hashcode of 160 bits.
+//
+//    SHA-256 - It has a higher level of security than SHA-1. It generates a hash with a length of 256.
+//
+//    SHA-384 - SHA-384 is a one-level higher than SHA-256, with a 384-bit hash.
+//
+//    SHA-512 - It is the most powerful of all the SHAs mentioned. It generates a 512-bit hash.
+//
+//    Ref:  https://randomkeygen.com
 
 @Component
 public class HashGenerator {

@@ -2,6 +2,7 @@ package com.xapp.member.authentication.utility;
 
 import java.util.Date;
 
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -21,22 +22,22 @@ import java.security.NoSuchAlgorithmException;
 @Component
 public class JwtToken {
 
-    private final String SECRET_KEY = "your_secret_key";  // Should be in a secure place
-
-//    public String generateToken(String userId) {
-//        return Jwts.builder()
-//                .setSubject(userId)
-//                .setIssuedAt(new Date())
-//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour expiration
-//                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
-//                .compact();
-//    }
-
     private static Logger logger = LogManager.getLogger(JwtToken.class);
 
     // Define your secret key (make sure it's at least 256 bits for HS512)
     // String baseKey = "your-very-secure-key-that-is-at-least-64-bytes-long!"; // Replace with your actual key
-    private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
+    private final String SECRET_KEY = "your_secret_key";  // Should be in a secure place
+
+    private final long EXPIRATION_TIME = 1000 * 60 * 60;
+
+    public String generateToken(String userId) {
+        return Jwts.builder()
+                .setSubject(userId)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour expiration
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .compact();
+    }
 
     //Use https://randomkeygen.com/ to generate Encryption Keys
     public byte[] generateHashFromString(String input) {

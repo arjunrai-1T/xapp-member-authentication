@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -25,10 +26,11 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/signInEndUser")
-    public Mono<SignUpRes> doSignInEndUser(@Valid @RequestBody SignInReq req){
+    public Mono<SignInRes> doSignInEndUser(@Valid @RequestBody SignInReq req, WebSession webSession){
         logger.info("eapi {} entry",AuthenticationControllerName);
+        Mono<SignInRes> res = authenticationService.doSignInImplEndUser(req,webSession);
         logger.info("eapi {} exit",AuthenticationControllerName);
-        return null;
+        return res;
     }
 
     @PostMapping("/signUpEndUser")

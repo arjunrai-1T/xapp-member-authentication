@@ -12,6 +12,7 @@ import com.xapp.member.authentication.repository.UserCategoriesRepository;
 import com.xapp.member.authentication.repository.UserLoginInfoRepository;
 import com.xapp.member.authentication.repository.UserStatusHashListRepository;
 import com.xapp.member.authentication.service.def.AuthenticationService;
+import com.xapp.member.authentication.utility.JwtToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,23 +46,47 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private XAppConfig xAppConfig;
 
+    @Autowired
+    JwtToken jwtToken;
 
     private final Logger logger= LoggerFactory.getLogger(AuthenticationServiceImpl.class);
-
     private final String AuthenticationServiceImplName = "AuthenticationServiceImpl";
 
     @Transactional
     public Mono<SignInRes> doSignInImplEndUser(SignInReq req , WebSession webSession){
-//        return doSignInImplEndUser(signInReq)
-//                .doOnSuccess(signInRes -> {
-//                    // Generate JWT token after successful sign-in
-//                    String authToken = jwtService.generateToken(signInRes.getUserId());
-//
-//                    // Store userId and authToken in the session
-//                    webSession.getAttributes().put("userId", signInRes.getUserId());
-//                    webSession.getAttributes().put("authToken", authToken);
-//                });
-        return null;
+
+        List<UserLoginInfo> usserLoginList = null;
+        usserLoginList = userLoginInfoRepository.findAll().stream()
+                .filter(user -> user.getUserLoginId().equalsIgnoreCase(req.getUserid()))  // Filter by user login id
+                .toList();
+        if(null == usserLoginList || usserLoginList.size() == 0){
+            return Mono.just(SignInRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail")
+                    .message("user not found").build());
+        }
+        UserLoginInfo userLoginInfo = usserLoginList.get(0);
+        String storedHash = userLoginInfo.getUserPwd();
+        String storedSalt = userLoginInfo.getUserPwdSalt();
+        String algoName = "SHA-256";
+        String enteredPassword = req.getPassword();
+        boolean isMatched = HashGenerator.verifyPassword(enteredPassword, storedHash,  storedSalt,  algoName);
+        if(isMatched){
+            // Generate JWT token after successful sign-in
+            // String authToken = jwtToken.generateToken(req.getUserid());
+            // Store userId and authToken in the session
+            // webSession.getAttributes().put("userId", req.getUserid());
+            // webSession.getAttributes().put("authToken", authToken);
+            return Mono.just(SignInRes.builder()
+                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                     .status("success")
+                     .message("user login success").build());
+        }else{
+            return Mono.just(SignInRes.builder()
+                    .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
+                    .status("fail")
+                    .message("user login failed").build());
+        }
     }
 
     @Transactional

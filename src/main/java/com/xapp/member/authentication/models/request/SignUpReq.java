@@ -3,6 +3,7 @@ package com.xapp.member.authentication.models.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.xapp.member.authentication.models.common.SearchInputMeta;
+import com.xapp.member.authentication.validator.ValidSearchInputMeta;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -21,7 +22,7 @@ import java.util.Optional;
 public class SignUpReq {
 
     @JsonProperty("searchInputMeta")
-    @NotBlank(message = "searchInputMeta must not be blank")
+    @ValidSearchInputMeta(message = "searchInputMeta must not be blank")
     SearchInputMeta searchInputMeta;
 
     @JsonProperty("loginId")
