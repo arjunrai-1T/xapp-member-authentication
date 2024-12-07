@@ -28,7 +28,4 @@ public class UserSession {
     @Column(name = "login_datetime", nullable = false)
     private LocalDateTime loginDatetime;
 
-    @Column(name = "logout_datetime" ,nullable = true)
-    private LocalDateTime logoutDatetime;
-
 }

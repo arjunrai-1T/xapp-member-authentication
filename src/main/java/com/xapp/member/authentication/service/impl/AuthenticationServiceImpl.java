@@ -68,7 +68,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return Mono.just(SignInRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("fail")
-                    .message("user not found").build());
+                    .message("user not found")
+                    .sessionToken("")
+                    .loginDateTime(String.valueOf(""))
+                    .logoutDateTime(String.valueOf(""))
+                    .build());
         }
         UserLoginInfo userLoginInfo = userLoginList.get(0);
         String storedHash = userLoginInfo.getUserPwd();
@@ -107,7 +111,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         .sessionToken(sessionToken)
                                         .expirationTime(parsedLogoutDateTime)
                                         .loginDatetime(parsedLogInDateTime)
-                                        .logoutDatetime(null).build();
+                                        .build();
             userSessionRepository.save(userSession);
             // Store userId and authToken in the webSession
             webSession.getAttributes().put("userId", req.getUserid());
@@ -117,12 +121,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return Mono.just(SignInRes.builder()
                      .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                      .status("success")
-                     .message("user login success").build());
+                     .message("user login success")
+                     .sessionToken(sessionToken)
+                     .loginDateTime(String.valueOf(parsedLogInDateTime))
+                     .logoutDateTime(String.valueOf(parsedLogoutDateTime))
+                    .build());
         }else{
             return Mono.just(SignInRes.builder()
                     .searchOutputMeta(SearchOutputMeta.builder().correlationId(req.getSearchInputMeta().getCorrelationId()).build())
                     .status("fail")
-                    .message("user login failed").build());
+                    .message("user login failed")
+                    .sessionToken("")
+                    .loginDateTime(String.valueOf(""))
+                    .logoutDateTime(String.valueOf(""))
+                    .build());
         }
     }
 
