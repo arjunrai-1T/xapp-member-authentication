@@ -1,15 +1,31 @@
 spring:
   application:
-      name: xapp
+      name: xapp-member-authentication
   datasource:
     url: jdbc:postgresql://localhost:5432/xapp
-    username: root
+    username: postgres
     password: redhat
     driver-class-name: org.postgresql.Driver
     jpa:
       database-platform: org.hibernate.dialect.PostgreSQL95Dialect
       hibernate:
         ddl-auto: none
+        show-sql: true
 
 server:
-    port: 8081
+    port: 8951
+#    base-path: /auth
+
+#springdoc:
+#  api-docs:
+#    enabled: true
+#    path: /v3/api-docs
+#  swagger-ui:
+#    enabled: true
+#    path: /swagger-ui.html
+
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springdoc: DEBUG
+#    org.springframework.web: DEBUG
