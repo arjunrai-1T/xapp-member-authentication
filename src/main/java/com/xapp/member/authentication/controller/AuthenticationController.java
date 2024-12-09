@@ -22,8 +22,14 @@ public class AuthenticationController {
 
     private final String AuthenticationControllerName = "AuthenticationController";
 
-    @Autowired
+    //@Autowired
     AuthenticationService authenticationService;
+
+    @Autowired
+    public AuthenticationController(AuthenticationService authenticationService) {
+        // Constructor injection, myDependency is injected here
+        this.authenticationService = authenticationService;
+    }
 
     @PostMapping("/signInEndUser")
     public Mono<SignInRes> doSignInEndUser(@Valid @RequestBody SignInReq req, WebSession webSession){
