@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         List<UserLoginInfo> userLoginList = null;
         userLoginList = userLoginInfoRepository.findAll().stream()
-                .filter(user -> user.getUserLoginId().equalsIgnoreCase(req.getUserid()))  // Filter by user login id
+                .filter(userLoginInfo -> userLoginInfo.getUserLoginId().equalsIgnoreCase(req.getUserid()))  // Filter by user login id
                 .toList();
         if(null == userLoginList || userLoginList.size() == 0){
             return Mono.just(SignInRes.builder()

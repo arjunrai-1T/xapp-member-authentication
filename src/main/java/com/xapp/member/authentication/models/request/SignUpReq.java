@@ -7,15 +7,11 @@ import com.xapp.member.authentication.validator.ValidSearchInputMeta;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Optional;
 
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
 @JsonPropertyOrder({"searchInputMeta","loginId","firstName","lastName","dob","gender","password"})

@@ -8,8 +8,7 @@ import com.xapp.member.authentication.models.common.SearchOutputMeta;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
