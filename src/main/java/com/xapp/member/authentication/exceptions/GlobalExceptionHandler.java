@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import reactor.core.publisher.Mono;
 
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ErrorResponseException.class)
@@ -14,9 +15,4 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage()));
     }
 
-//    // Optionally, handle other exceptions
-//    @ExceptionHandler(Exception.class)
-//    public Mono<ResponseEntity<String>> handleGeneralException(Exception ex) {
-//        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + ex.getMessage()));
-//    }
 }
